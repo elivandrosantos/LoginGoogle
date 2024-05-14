@@ -38,14 +38,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
-import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialException
 import coil.compose.AsyncImage
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.GoogleAuthProvider
@@ -53,11 +50,9 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.security.MessageDigest
-import java.util.UUID
 
 @Composable
-fun Home(modifier: Modifier = Modifier) {
+fun HomeRefactor(modifier: Modifier = Modifier) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     var user by remember { mutableStateOf(Firebase.auth.currentUser) }
@@ -69,57 +64,6 @@ fun Home(modifier: Modifier = Modifier) {
             user = null
         }
     )
-
-    val onClick: () -> Unit = {
-        val credentialManager = CredentialManager
-            .create(context)
-
-        val rawNonce = UUID.randomUUID().toString()
-        val bytes = rawNonce.toByteArray()
-        val md = MessageDigest.getInstance("SHA-256")
-        val digest = md.digest(bytes)
-        val hashedNonce =
-            digest.fold("") { str, it -> str + "%02x".format(it) }
-
-        val googleIdOption = GetGoogleIdOption.Builder()
-            .setFilterByAuthorizedAccounts(true)
-            .setServerClientId(context.getString(R.string.web_id))
-            .setNonce(hashedNonce)
-            .build()
-
-        val request: GetCredentialRequest = GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOption)
-            .build()
-
-        coroutineScope.launch {
-            credentialManager.clearCredentialState(request = ClearCredentialStateRequest())
-            try {
-                val result = credentialManager
-                    .getCredential(request = request, context = context)
-
-                val credential = result.credential
-
-                val googleIdTokenCredential = GoogleIdTokenCredential
-                    .createFrom(credential.data)
-
-                val googleIdToken = googleIdTokenCredential.idToken
-
-                Toast.makeText(context, "Você está logado!!", Toast.LENGTH_SHORT).show()
-
-                // Handle successful sign-in
-            } catch (e: GetCredentialException) {
-                // Handle GetCredentialException thrown by `credentialManager.getCredential()`
-                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
-            } catch (e: GoogleIdTokenParsingException) {
-                // Handle GoogleIdTokenParsingException thrown by `GoogleIdTokenCredential.createFrom()`
-                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                // Handle unknown exceptions
-                Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
-            }
-
-        }
-    }
 
     val gso =
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -195,6 +139,36 @@ fun Home(modifier: Modifier = Modifier) {
             }
         }
     }
+    
 }
 
+@Composable
+fun authLauncher(
+    onAuthComplete: (AuthResult) -> Unit,
+    onAuthError: (ApiException) -> Unit
+): ManagedActivityResultLauncher<Intent, ActivityResult> {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    return rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)!!
+            val credential = GoogleAuthProvider.getCredential(account.idToken!!, null)
+            val credentialManager = CredentialManager
+                .create(context)
+            scope.launch {
+                credentialManager.clearCredentialState(request = ClearCredentialStateRequest())
+                val authResult = Firebase.auth.signInWithCredential(credential).await()
+                onAuthComplete(authResult)
+                Toast.makeText(context, "Você está logado!!", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: GoogleIdTokenParsingException) {
+            Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+        } catch (e: GetCredentialException) {
+            Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+        } catch (e: ApiException) {
+            onAuthError(e)
+        }
 
+    }
+}
