@@ -36,7 +36,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.exceptions.GetCredentialException
 import coil.compose.AsyncImage
@@ -157,7 +156,7 @@ fun authLauncher(
             val credentialManager = CredentialManager
                 .create(context)
             scope.launch {
-                credentialManager.clearCredentialState(request = ClearCredentialStateRequest())
+//                credentialManager.clearCredentialState(request = ClearCredentialStateRequest())
                 val authResult = Firebase.auth.signInWithCredential(credential).await()
                 onAuthComplete(authResult)
                 Toast.makeText(context, "Você está logado!!", Toast.LENGTH_SHORT).show()

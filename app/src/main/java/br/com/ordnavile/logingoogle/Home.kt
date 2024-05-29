@@ -1,11 +1,6 @@
 package br.com.ordnavile.logingoogle
 
-import android.content.Intent
 import android.widget.Toast
-import androidx.activity.compose.ManagedActivityResultLauncher
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -43,16 +38,13 @@ import androidx.credentials.exceptions.GetCredentialException
 import coil.compose.AsyncImage
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.Scope
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
-import com.google.firebase.auth.AuthResult
-import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.security.MessageDigest
 import java.util.UUID
 
@@ -125,9 +117,12 @@ fun Home(modifier: Modifier = Modifier) {
         GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(context.getString(R.string.web_id))
             .requestEmail()
+            .requestScopes(Scope("https://www.googleapis.com/auth/gmail.send"))
             .build()
 
     val googleSignInClient = GoogleSignIn.getClient(context, gso)
+    val credentialManager = CredentialManager
+        .create(context)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -184,6 +179,11 @@ fun Home(modifier: Modifier = Modifier) {
                 onClick = {
                     Firebase.auth.signOut()
                     user = null
+                    coroutineScope.launch {
+                        credentialManager.clearCredentialState(request = ClearCredentialStateRequest())
+                    }
+
+
 
                 },
                 colors = ButtonDefaults.buttonColors(Color.White)

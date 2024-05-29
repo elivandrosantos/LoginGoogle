@@ -19,3 +19,30 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Google API Client
+-keepclassmembers class * {
+    @com.google.api.client.util.Key <fields>;
+}
+
+-keepclassmembers class * {
+    @com.google.api.client.util.Key <methods>;
+}
+
+-keepattributes Signature,RuntimeVisibleAnnotations,AnnotationDefault,EnclosingMethod
+-keepattributes *Annotation*
+
+# Gson
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class com.google.gson.** { *; }
+-keep interface com.google.gson.** { *; }
+-keepclassmembers class ** {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+
+-keepclassmembers class ** {
+    @com.google.gson.annotations.Expose <fields>;
+}
+# https://github.com/googleapis/google-api-java-client/issues/1450
+-keep public class com.google.api.client.googleapis.GoogleUtils

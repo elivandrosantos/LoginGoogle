@@ -46,6 +46,14 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+//            excludes += "/..."
+//            excludes += "META-INF/LICENSE"
+//            excludes += "META-INF/*.properties"
+//            excludes += "META-INF/AL2.0"
+//            excludes += "META-INF/LGPL2.1"
+//            excludes += "META-INF/*.kotlin_module"
+            excludes += "**/*"
+
         }
     }
 }
@@ -63,6 +71,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.googleid)
     implementation(libs.firebase.firestore.ktx)
+    implementation(libs.androidx.ui.viewbinding)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -71,13 +80,32 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    implementation ("com.google.android.gms:play-services-auth:21.1.1")
+    implementation("androidx.credentials:credentials:1.2.2")
+//    implementation("androidx.credentials:credentials-play-services-auth:1.2.2")
 
-    implementation ("androidx.credentials:credentials:1.2.2")
-    implementation ("androidx.credentials:credentials-play-services-auth:1.2.2")
+    // Google Play Services Auth
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
 
+    // Gmail API
+    implementation("com.google.apis:google-api-services-gmail:v1-rev20240520-2.0.0")
+
+    // Google API Client
+    implementation("com.google.api-client:google-api-client-android:2.5.1")
+    implementation("com.google.http-client:google-http-client-android:1.41.8")
+    implementation("com.google.api-client:google-api-client-gson:2.5.1")
+    implementation("com.google.http-client:google-http-client-gson:1.41.8")
+
+
+
+    implementation("androidx.compose.ui:ui:1.6.7")
+    implementation ("com.sun.mail:android-mail:1.6.6")
+    implementation ("com.sun.mail:android-activation:1.6.7")
     implementation("io.coil-kt:coil-compose:2.6.0")
+
+    implementation(kotlin("reflect"))
+
 //    implementation ("com.google.android.libraries.identity.googleid:googleid:1.2.2")
+
 
 
 }
